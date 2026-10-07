@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trinetra — Transaction Risk Engine</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1a1a1a;background:#f5f6f7;font-size:14px;line-height:1.35}
+*{box-sizing:border-box}body{margin:0;background:#f5f6f7}button,input,select{font:inherit}
+header{height:58px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.brand{color:#12263f;font-size:20px;font-weight:650}.divider{height:22px;border-left:1px solid #d1d5db;margin:0 12px}.product{color:#6b7280;font-size:13px}.demo{color:#6b7280;font-size:12px}
+main{display:grid;grid-template-columns:minmax(0,58fr) minmax(360px,42fr);gap:16px;max-width:1500px;margin:18px auto;padding:0 18px}.stack{display:grid;gap:16px;align-content:start}.card{background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:16px}.card h2,.card h3{margin:0;color:#12263f;font-size:16px;font-weight:650}.card h2{font-size:17px}.sub{color:#6b7280;font-size:12px;margin:4px 0 14px}
+.details{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px}.label,.field label{display:block;color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.value{margin-top:3px;font-weight:550}.money,.score,.amount{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button,.primary{border:1px solid #12263f;background:#fff;color:#12263f;border-radius:3px;padding:8px 10px;cursor:pointer;font-weight:600;font-size:12px}.actions button:hover,.primary:hover{background:#f0f3f6}.actions .critical-btn{border-color:#b91c1c;color:#b91c1c}.actions .elevated-btn{border-color:#b7791f;color:#8b5d0e}
+.group-title{color:#12263f;font-weight:650;font-size:12px;border-bottom:1px solid #e5e7eb;padding-bottom:5px;margin:14px 0 0}.context-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f1f2}.context-row:last-child{border-bottom:0}.context-label{color:#374151}.context-value{text-align:right;font-weight:520}.tag{font-size:10px;letter-spacing:.05em;border:1px solid;padding:2px 5px;border-radius:3px;min-width:50px;text-align:center}.normal{color:#1b7f4b;border-color:#a7d7bd}.risk{color:#b91c1c;border-color:#e7b1b1}
+.table-wrap{overflow:auto}.rules{width:100%;border-collapse:collapse;font-size:12px}.rules th{text-align:left;color:#6b7280;font-weight:600;padding:7px 6px;border-bottom:1px solid #dfe3e7}.rules td{padding:7px 6px;border-bottom:1px solid #eef0f2;vertical-align:top}.rules .num{text-align:right;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;white-space:nowrap}.rules tr.off{color:#9ca3af}.rules tr.layer td{padding:10px 6px 4px;color:#12263f;font-weight:650;border-bottom:0}.why{display:block;color:#6b7280;font-size:11px;margin-top:2px}.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #dfe3e7;margin-top:10px;padding-top:10px;font-weight:650}.total .arithmetic{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:500;color:#374151}
+.score-card{text-align:center}.score-number{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:48px;line-height:1;color:#12263f}.score-outof{color:#6b7280;margin-left:5px}.tier{font-size:12px;letter-spacing:.18em;font-weight:700;margin-top:7px}.low{color:#1b7f4b}.elevated{color:#b7791f}.critical{color:#b91c1c}.bar{height:10px;display:flex;margin:18px 0 15px;border:1px solid #d1d5db;border-radius:2px;overflow:hidden;position:relative}.bar i{display:block;height:100%}.bar .g{background:#1b7f4b;width:30%}.bar .a{background:#b7791f;width:50%}.bar .r{background:#b91c1c;width:20%}.marker{position:absolute;top:-4px;width:2px;height:18px;background:#1a1a1a}.layers{display:grid;gap:8px;text-align:left}.layer-line{display:flex;justify-content:space-between;color:#374151;font-size:12px}.layer-line b{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.response p{margin:8px 0}.response .ok{color:#1b7f4b;font-weight:600}.response .warn{color:#b7791f;font-weight:600}.response .hold{border-left:3px solid #b7791f;padding:8px 10px;background:#fffbf2}.critical-alert{border:1px solid #b91c1c;background:#fff5f5;color:#b91c1c;padding:10px;font-weight:700;margin-top:10px}.response button{margin-top:8px}.link{border:0;background:none;color:#12263f;text-decoration:underline;cursor:pointer;padding:0;font-size:12px}.reference{margin-top:12px}.hidden{display:none}.override-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.field input,.field select{width:100%;border:1px solid #d1d5db;border-radius:3px;padding:7px;background:#fff}.log{font-size:11px}.log td,.log th{padding:6px}.log .tier-cell{font-weight:700}.empty{color:#6b7280;font-size:12px}
+@media(max-width:950px){main{grid-template-columns:1fr}.details{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){header{padding:0 14px}.demo{display:none}main{padding:0 10px;margin-top:10px}.details,.override-grid{grid-template-columns:1fr}.context-row{grid-template-columns:1fr auto}.context-row .tag{grid-column:2;grid-row:1}.context-value{grid-column:1;grid-row:2;text-align:left}}
+</style>
+</head>
+<body>
+<header><div><span class="brand">Trinetra</span><span class="divider"></span><span class="product">Transaction Risk Engine</span></div><span class="demo">Demo environment. Synthetic data.</span></header>
+<main><section class="stack">
+<article class="card"><h2>Transaction Details</h2><div id="details" class="details"></div></article>
+<article class="card"><h2>Generate Transaction Case</h2><p class="sub">Each generation produces a new, realistic transaction.</p><div class="actions"><button onclick="generate('low')">Low Risk</button><button class="elevated-btn" onclick="generate('elevated')">Elevated</button><button class="critical-btn" onclick="generate('critical')">Critical</button></div></article>
+<article class="card"><h2>Transaction Context</h2><p class="sub">Retrieved automatically from core banking systems at the moment of transfer initiation.</p><div id="context"></div></article>
+<article class="card"><h2>Score Breakdown</h2><div id="breakdown" class="table-wrap"></div></article>
+<article class="card"><button class="link" onclick="toggle('override')">Adjust parameters manually.</button><div id="override" class="hidden"><p class="sub">The entry-method override includes Saved beneficiary, Typed, and Pasted from clipboard.</p><div class="override-grid"><div class="field"><label>Transfer amount</label><input id="oAmount" type="number"></div><div class="field"><label>Available balance</label><input id="oBalance" type="number"></div><div class="field"><label>Usual upper limit</label><input id="oLimit" type="number"></div><div class="field"><label>Entry method</label><select id="oEntry"><option>Saved beneficiary</option><option>Typed</option><option>Pasted from clipboard</option></select></div><div class="field"><label>Call minutes</label><input id="oCall" type="number" min="0"></div><div class="field"><label>Remote access</label><select id="oRemote"><option value="false">Not detected</option><option value="true">Detected: AnyDesk</option></select></div></div><button class="primary" style="margin-top:10px" onclick="applyOverrides()">Rescore</button></div></article>
+</section><aside class="stack">
+<article class="card score-card"><h2>Risk Assessment</h2><div style="margin-top:14px"><span id="score" class="score-number">0</span><span class="score-outof">/ 100</span></div><div id="tier" class="tier low">LOW</div><div class="bar"><i class="g"></i><i class="a"></i><i class="r"></i><b id="marker" class="marker"></b></div><h3 style="text-align:left;font-size:13px;margin-bottom:10px">Score by Detection Layer</h3><div id="layers" class="layers"></div></article>
+<article class="card response"><h2 id="responseTitle">Trinetra Awaaz Response</h2><div id="responseBody"></div></article>
+<article class="card"><button class="link" onclick="toggle('reference')">View scoring model.</button><div id="reference" class="hidden reference"><div id="referenceBody"></div></div></article>
+<article class="card"><h2>Assessment Log</h2><div id="log" class="table-wrap" style="margin-top:8px"></div></article>
+</aside></main>
+<script>
+const rules=[
+ {n:1,label:"Call active, unsaved number, over 10 min",layer:"Session",max:35,p:15,why:"Victim is being walked through it live"},
+ {n:2,label:"Remote access / screen-sharing detected",layer:"Session",p:12,why:"Criminal is watching or controlling the session"},
+ {n:3,label:"Account number pasted (beneficiary ≤7 days old)",layer:"Session",p:8,why:"Details may have come from someone else"},
+ {n:4,label:"Beneficiary account under 30 days old",layer:"Beneficiary",max:25,p:10,why:"Mule accounts are opened just before use"},
+ {n:5,label:"5+ distinct senders to beneficiary in 7 days",layer:"Beneficiary",p:10,why:"Looks like a collection account"},
+ {n:6,label:"No prior payee in beneficiary's state",layer:"Beneficiary",p:5,why:"No existing link to that location"},
+ {n:7,label:"Amount above customer's 95th percentile",layer:"Baseline",max:25,p:10,why:"Out of pattern for this customer"},
+ {n:8,label:"Transfer exceeds 70% of available balance",layer:"Baseline",p:10,why:"Victims are pushed to send nearly everything"},
+ {n:9,label:"Outside customer's usual active hours",layer:"Baseline",p:5,why:"Breaks the customer's own routine"},
+ {n:10,label:"Liquidity event in previous 72 hours",layer:"Funding",max:15,p:8,why:"Money was likely raised for this payment"},
+ {n:11,label:"New beneficiary (<60 min), no earlier transfer",layer:"Funding",p:7,why:"No time was left to verify"}
+];
+const groups=[
+ ["Maharashtrian",["Sunita","Sneha","Pooja","Madhuri","Anjali","Rutuja","Kavita","Vaishali"],["Rahul","Sachin","Prashant","Amit","Nitin","Sameer","Ganesh","Vinayak"],["Patil","Kulkarni","Deshmukh","Joshi","Jadhav","Pawar","Shinde","Kadam"],"Marathi"],
+ ["Gujarati",["Hetal","Nisha","Bhavna","Jigna","Dipti","Riddhi","Komal","Pinal"],["Jignesh","Hitesh","Chirag","Mehul","Nilesh","Paresh","Rakesh","Bhavin"],["Shah","Mehta","Patel","Desai","Thakkar","Parekh","Trivedi","Modi"],"Gujarati"],
+ ["North Indian",["Priya","Neha","Rekha","Seema","Manju","Ritu","Pallavi","Shalini"],["Ramesh","Sanjay","Vikram","Ajay","Manoj","Rajesh","Deepak","Suresh"],["Sharma","Verma","Gupta","Singh","Agarwal","Malhotra","Chopra","Bhatia"],"Hindi"],
+ ["South Indian",["Lakshmi","Deepa","Meera","Anitha","Divya","Revathi","Kavya","Padma"],["Venkatesh","Arjun","Karthik","Ravi","Srinivas","Mahesh","Balaji","Harish"],["Iyer","Nair","Reddy","Pillai","Menon","Rao","Naidu","Krishnan"],"Tamil"],
+ ["Bengali",["Sudipta","Moumita","Rina","Debjani","Sharmila","Anindita","Tanushree","Mithu"],["Subrata","Arnab","Debashis","Partha","Sourav","Tapan","Ranjit","Indranil"],["Banerjee","Chatterjee","Mukherjee","Ghosh","Das","Sen","Bose","Dutta"],"Bengali"],
+ ["Urdu-origin",["Fatima","Ayesha","Shabana","Rukhsar","Nazia","Zoya","Farheen","Sana"],["Imran","Faisal","Aslam","Irfan","Salman","Javed","Nadeem","Rizwan"],["Sheikh","Khan","Ansari","Qureshi","Siddiqui","Pathan","Mirza","Hussain"],"Urdu"]];
+
+const occupations=[
+ [22,30,["Gig worker","Salaried professional","Small business owner"]],
+ [31,44,["Salaried professional","Self-employed","Small business owner","Homemaker"]],
+ [45,57,["Salaried professional","Self-employed","Small business owner","Homemaker"]],
+ [58,65,["Self-employed","Small business owner","Homemaker","Retired"]],
+ [66,72,["Retired","Homemaker","Self-employed"]]
+];
+
+const remarks={
+ low:["Rent payment","Electricity bill","Society maintenance","School fee installment","Tuition fees","Insurance premium","Family support","Home repair payment","Mobile and broadband bill","Domestic help salary","Payment to friend","Supplier payment (business)","Raw material purchase (business)","Shop rent (business)"],
+ elevated:["Vehicle down payment","Medical procedure payment","Hospital admission deposit","Home renovation advance","Wedding hall booking advance","Property booking token","Investment","Trading account deposit","Refund processing","Part time task deposit","Registration fee","Loan processing fee","Machinery purchase advance (business)"],
+ critical:["Verification deposit","Account verification","Security deposit","Refundable deposit","Compliance deposit","Case clearance","Legal verification","Account safety check"]
+};
+
+const amountBounds={
+ "Rent payment":[5000,60000],
+ "Electricity bill":[300,8000],
+ "Society maintenance":[1000,15000],
+ "School fee installment":[2000,40000],
+ "Tuition fees":[500,20000],
+ "Insurance premium":[3000,50000],
+ "Family support":[2000,30000],
+ "Home repair payment":[1000,40000],
+ "Mobile and broadband bill":[300,2500],
+ "Domestic help salary":[1500,18000],
+ "Payment to friend":[500,15000],
+ "Supplier payment (business)":[10000,200000],
+ "Raw material purchase (business)":[10000,300000],
+ "Shop rent (business)":[10000,150000],
+ "Vehicle down payment":[20000,250000],
+ "Medical procedure payment":[20000,300000],
+ "Hospital admission deposit":[10000,60000],
+ "Home renovation advance":[25000,200000],
+ "Wedding hall booking advance":[20000,250000],
+ "Property booking token":[50000,500000],
+ "Investment":[10000,500000],
+ "Trading account deposit":[10000,200000],
+ "Refund processing":[1000,20000],
+ "Part time task deposit":[500,15000],
+ "Registration fee":[500,10000],
+ "Loan processing fee":[2000,15000],
+ "Machinery purchase advance (business)":[10000,300000],
+ "Verification deposit":[5000,50000],
+ "Account verification":[1000,25000],
+ "Security deposit":[10000,100000],
+ "Refundable deposit":[5000,40000],
+ "Compliance deposit":[10000,50000],
+ "Case clearance":[20000,150000],
+ "Legal verification":[10000,100000],
+ "Account safety check":[5000,99000]
+};
+
+let usedNames=new Set(), current, logRows=[], responseState="initial", id=0;
+
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const chance=p=>Math.random()<p;
+const int=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const money=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const cap=s=>s.replace(/\b\w/g,c=>c.toUpperCase());
+const duration=m=>m<120?m+" minutes":m<1440?Math.round(m/60)+" hours":m<60*24*30?Math.round(m/1440)+" days":m<60*24*365?Math.round(m/(60*24*30))+" months":Math.round(m/(60*24*365))+" years";
+
+function customer(){
+ for(let i=0;i<500;i++){
+  let g=pick(groups),female=chance(.5),first=pick(female?g[1]:g[2]),surname=pick(g[3]),name=first+" "+surname;
+  if(!usedNames.has(name)){
+   usedNames.add(name);
+   if(usedNames.size>400)usedNames.clear();
+   return {name,group:g[0],lang:g[4],surname,gender:female?"Female":"Male"};
+  }
+ }
+ usedNames.clear();
+ return customer();
+}
+
+function occupation(age){
+ return pick(occupations.find(x=>age>=x[0]&&age<=x[1])[2]);
+}
+
+const bands={low:[0,29],elevated:[30,79],critical:[80,100]};
+const probabilities={
+ low:[.02,.01,.15,.10,.05,.25,.05,.05,.20,.08,.10],
+ elevated:[.35,.20,.40,.35,.30,.35,.45,.40,.35,.35,.40],
+ critical:[.85,.70,.90,.75,.70,.60,.70,.70,.45,.55,.55]
+};
+
+function drawRules(type){
+ let p=probabilities[type],fired={};
+ for(let i=0;i<rules.length;i++){
+  fired[i+1]=chance(i===1&&fired[1]?Math.min(1,p[i]*2):p[i]);
+ }
+ return fired;
+}
+
+function populate(type,fired){
+ let c=customer(),
+     age=c.age||int(22,72),
+     occupationName=occupation(age),
+     business=/Self-employed|Small business owner/.test(occupationName),
+     remarkPool=remarks[type].filter(remark=>!remark.includes("(business)")||business),
+     remark=pick(remarkPool),
+     bounds=amountBounds[remark],
+     amount=int(bounds[0],bounds[1]),
+     added,
+     benAge,
+     prior,
+     senders=fired[5]?int(5,15):int(0,4),
+     call=fired[1]?int(11,45):0,
+     remote=fired[2],
+     entry=fired[3]?"Pasted from clipboard":(fired[1]?"Typed":(fired[11]?"Typed":"Saved beneficiary")),
+     noState=fired[6],
+     outside=fired[9],
+     liquidity=fired[10];
+
+ if(fired[11]){
+  added=int(5,55);
+  prior=0;
+ }else if(fired[3]){
+  added=int(60,6*1440);
+  prior=int(0,4);
+ }else{
+  added=int(200,1800)*1440;
+  prior=int(3,60);
+ }
+
+ benAge=fired[4]?int(1,29):int(30,1800);
+
+ let limit=fired[7]
+   ?Math.round(amount/(1.1+Math.random()*2.4))
+   :Math.round(amount*(1.2+Math.random()*3.8));
+
+ let balance=fired[8]
+   ?Math.round(amount/(.71+Math.random()*.27))
+   :Math.round(amount/(.10+Math.random()*.59));
+
+ c.age=age;
+ c.occupation=occupationName;
+ c.remark=remark;
+ c.type=type;
+ c.amount=amount;
+ c.balance=balance;
+ c.limit=limit;
+ c.added=added;
+ c.benAge=benAge;
+ c.prior=prior;
+ c.senders=senders;
+ c.call=call;
+ c.remote=remote;
+ c.entry=entry;
+ c.paste=fired[3];
+ c.noState=noState;
+ c.outside=outside;
+ c.liquidity=liquidity;
+ c.share=Math.round(amount/balance*100);
+ c.mult=amount/limit;
+ c.phone=call>0;
+
+ return c;
+}
+
+function makeCase(type){
+ for(let attempt=0;attempt<60;attempt++){
+  let fired=drawRules(type),c=populate(type,fired),e=evaluate({...c,forced:fired});
+  if(e.score>=bands[type][0]&&e.score<=bands[type][1]){
+   c.forced=fired;
+   return c;
+  }
+ }
+ let fired=drawRules(type),c=populate(type,fired);
+ c.forced=fired;
+ return c;
+}
+
+function evaluate(c){
+ let fired=c.forced||{
+  1:c.call>10&&c.phone&&c.entry!=="Saved beneficiary",
+  2:c.remote,
+  3:c.paste&&c.added<=7*1440,
+  4:c.benAge<30,
+  5:c.senders>=5,
+  6:c.noState,
+  7:c.amount>c.limit,
+  8:c.share>70,
+  9:c.outside,
+  10:c.liquidity,
+  11:c.added<60&&c.prior===0
+ };
+
+ let score=Math.min(100,rules.reduce((s,r)=>s+(fired[r.n]?r.p:0),0));
+ let tier=score>=80?"CRITICAL":score>=30?"ELEVATED":"LOW";
+
+ return {fired,score,tier};
+}
+
+function fmtObserved(n,c){
+ return {
+  1:c.forced&&c.forced[1]?"YES":"NO",
+  2:c.remote?"Detected: AnyDesk":"Not detected",
+  3:c.added<=7*1440?(c.entry==="Pasted from clipboard"?"Pasted from clipboard":"Typed"):"Saved beneficiary, no account number entered",
+  4:duration(c.benAge*1440),
+  5:c.senders+" senders",
+  6:c.noState?"No prior payee in this state":"Consistent with existing payees",
+  7:money(c.amount),
+  8:c.share+"%",
+  9:c.outside?"Outside usual hours":"Within usual hours",
+  10:c.liquidity?"Deposit break or loan credited":"Nothing unusual",
+  11:c.added<60&&c.prior===0?duration(c.added)+" ago, no earlier transfer":c.prior+" earlier transfers"
+ }[n];
+}
+
+function render(){
+ let e=evaluate(current);
+
+ document.getElementById("details").innerHTML=[
+  ["Customer",current.name],
+  ["Age",current.age],
+  ["Gender",current.gender],
+  ["Occupation",current.occupation],
+  ["Payment remark",current.remark],
+  ["Transfer amount",money(current.amount)]
+ ].map(x=>`<div><span class="label">${x[0]}</span><div class="value ${x[0].includes("amount")?"money":""}">${x[1]}</div></div>`).join("");
+
+ let sessionRows=[
+  ["Phone call active during transfer",fmtObserved(1,current),e.fired[1]],
+  ["Remote access software running",fmtObserved(2,current),current.remote]
+ ];
+
+ if(current.added<=7*1440){
+  sessionRows.push(["Beneficiary account number entered by",fmtObserved(3,current),current.paste]);
+ }else{
+  sessionRows.push(["Beneficiary account number entered by","Saved beneficiary, no account number entered",false]);
+ }
+
+ let ctx=[
+  ["Session Context",sessionRows],
+  ["Beneficiary Profile",[
+   ["Beneficiary account opened",duration(current.benAge*1440),current.benAge<30],
+   ["Senders crediting this beneficiary, last 7 days",current.senders+" senders",current.senders>=5],
+   ["Beneficiary bank location",fmtObserved(6,current),current.noState]
+  ]],
+  ["Customer Baseline",[
+   ["Available balance before transfer",money(current.balance),false],
+   ["Transfer amount",money(current.amount),false],
+   ["Share of available balance",current.share+"%",current.share>70],
+   ["Customer's usual upper limit (95th percentile, 12 months)",money(current.limit),false],
+   ["Transfer vs usual limit",current.mult.toFixed(1)+" times",current.mult>1],
+   ["Time of transfer",fmtObserved(9,current),current.outside]
+  ]],
+  ["Funding and Payee History",[
+   ["Account activity, previous 72 hours",fmtObserved(10,current),current.liquidity],
+   ["Beneficiary added",duration(current.added)+" ago",current.added<60],
+   ["Previous transfers to this beneficiary",current.prior?current.prior:"None",current.prior===0]
+  ]]
+ ];
+
+ document.getElementById("context").innerHTML=ctx.map(g=>`<div class="group-title">${g[0]}</div>`+g[1].map(r=>`<div class="context-row"><span class="context-label">${r[0]}</span><span class="context-value">${r[1]}</span><span class="tag ${r[2]?"risk":"normal"}">${r[2]?"RISK":"NORMAL"}</span></div>`).join("")).join("");
+
+ let html="<table class=rules><thead><tr><th>Rule</th><th>Observed</th><th>Threshold</th><th class=num>Points</th></tr></thead><tbody>",
+     last="";
+
+ rules.forEach(r=>{
+  if(r.layer!==last){
+   let layerTotal=rules.filter(x=>x.layer===r.layer).reduce((s,x)=>s+x.p,0);
+   html+=`<tr class=layer><td colspan=4>${r.layer} <span style="float:right">${layerTotal} / ${r.max||0}</span></td></tr>`;
+   last=r.layer;
+  }
+
+  let on=e.fired[r.n],
+      why=on?`<span class=why>${r.why}</span>`:"",
+      threshold=r.n===8?"> 70%":r.n===7?"> 95th percentile":r.n===9?"Outside usual hours":"Condition applies";
+
+  html+=`<tr class="${on?"":"off"}"><td>${r.n}. ${r.label}${why}</td><td>${fmtObserved(r.n,current)}</td><td>${threshold}</td><td class=num>${on?"+"+r.p:"0"}</td></tr>`;
+ });
+
+ html+="</tbody></table><div class=total><span>Total Risk Score</span><span class=arithmetic>"+rules.filter(r=>e.fired[r.n]).map(r=>r.p).join(" + ")+" = "+e.score+"</span></div>";
+ document.getElementById("breakdown").innerHTML=html;
+
+ document.getElementById("score").textContent=e.score;
+
+ let tc=e.tier.toLowerCase();
+ document.getElementById("score").className="score-number "+tc;
+ document.getElementById("tier").className="tier "+tc;
+ document.getElementById("tier").textContent=e.tier;
+ document.getElementById("marker").style.left=Math.min(e.score,99)+"%";
+
+ let sums=["Session","Beneficiary","Baseline","Funding"].map(l=>[
+  l,
+  rules.filter(r=>r.layer===l).reduce((s,r)=>s+(e.fired[r.n]?r.p:0),0),
+  rules.filter(r=>r.layer===l).reduce((s,r)=>s+r.p,0)
+ ]);
+
+ document.getElementById("layers").innerHTML=sums.map(x=>`<div class=layer-line><span>${x[0]}</span><b>${x[1]} / ${x[2]}</b></div>`).join("");
+
+ renderResponse(e);
+
+ document.getElementById("referenceBody").innerHTML="<table class=rules><thead><tr><th>Rule</th><th>Layer</th><th>Weight</th></tr></thead><tbody>"+rules.map(r=>`<tr><td>${r.n}. ${r.label}</td><td>${r.layer}</td><td class=num>${r.p}</td></tr>`).join("")+"</tbody></table>";
+
+ renderLog();
+}
+
+function language(){
+ return current.lang==="Hindi"?"Hindi → English":current.lang+" → Hindi → English";
+}
+
+function setResolution(value){
+ current.response=value;
+ if(current.log)current.log.response=value;
+ render();
+}
+
+function renderResponse(e){
+ let b=document.getElementById("responseBody"),
+     t=document.getElementById("responseTitle"),
+     order=language();
+
+ if(e.tier==="LOW"){
+  t.textContent="Trinetra Awaaz Response";
+  b.innerHTML="<p>No action taken. Transaction proceeds normally.</p>";
+  return;
+ }
+
+ if(e.tier==="ELEVATED"&&responseState!=="critical"){
+  t.textContent="Awaaz Check";
+
+  let base="<p>Automated voice call placed to registered number.</p><p>Spoken order: "+order+".</p><p>One simple question asked. Confirm with a keypress.</p>";
+
+  if(responseState==="confirmed"){
+   b.innerHTML=base+"<p class=ok>Confirmed by customer. Transaction released.</p>";
+  }else if(responseState==="hold"){
+   b.innerHTML=base+"<div class=hold>No response received.</div><button class=primary onclick=\"responseState='critical';setResolution('Escalated')\">Continue to Critical Protocol</button>";
+  }else{
+   b.innerHTML=base+"<button class=primary onclick=\"responseState='confirmed';setResolution('Confirmed')\">Simulate: Customer Confirms</button> <button class=primary onclick=\"responseState='hold';render()\">Simulate: No Answer / Unsure</button>";
+  }
+
+  return;
+ }
+
+ t.textContent="Awaaz Response";
+
+ let body="<p><b>Transfer held.</b></p><p>Fraud officer calling customer directly.</p>";
+
+ if(current.response==="Reached"){
+  body+="<p class=ok>Reached. Customer confirms the transaction was made under coercion. Transfer stopped, case referred to fraud investigation.</p>";
+ }else if(current.response==="Alert Sent"){
+  body+="<div class='critical-alert'>CRITICAL ALERT SENT — maximum-priority notification pushed to customer's device. Rings loudly and vibrates even on silent or Do Not Disturb, the same design principle as India's government SACHET Cell Broadcast Alert System, built so it cannot be missed or ignored.</div>";
+ }else{
+  body+="<button class=primary onclick=\"setResolution('Reached')\">Simulate: Officer Reaches Customer</button> <button class=primary onclick=\"setResolution('Alert Sent')\">Simulate: Call Not Picked Up</button>";
+ }
+
+ b.innerHTML=body;
+}
+
+function renderLog(){
+ let el=document.getElementById("log");
+
+ if(!logRows.length){
+  el.innerHTML="<div class=empty>No assessments yet.</div>";
+  return;
+ }
+
+ el.innerHTML="<table class='rules log'><thead><tr><th>Time</th><th>Customer</th><th>Amount</th><th>Score</th><th>Tier</th><th>Resolution</th></tr></thead><tbody>"+logRows.slice(0,10).map(x=>`<tr><td>${x.time}</td><td>${x.name}</td><td class=amount>${money(x.amount)}</td><td class=num>${x.score}</td><td class=tier-cell>${x.tier}</td><td>${x.response||""}</td></tr>`).join("")+"</tbody></table>";
+}
+
+function generate(type){
+ current=makeCase(type);
+ responseState="initial";
+
+ let e=evaluate(current),
+     row={
+      time:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}),
+      name:current.name,
+      amount:current.amount,
+      score:e.score,
+      tier:e.tier,
+      response:""
+     };
+
+ current.log=row;
+ logRows.unshift(row);
+ render();
+}
+
+function toggle(id){
+ document.getElementById(id).classList.toggle("hidden");
+}
+
+function applyOverrides(){
+ current.amount=+document.getElementById("oAmount").value;
+ current.balance=+document.getElementById("oBalance").value;
+ current.limit=+document.getElementById("oLimit").value;
+ current.entry=document.getElementById("oEntry").value;
+ current.paste=current.entry==="Pasted from clipboard";
+ current.call=+document.getElementById("oCall").value;
+ current.phone=current.call>0;
+ current.remote=document.getElementById("oRemote").value==="true";
+ current.share=Math.round(current.amount/current.balance*100);
+ current.mult=current.amount/current.limit;
+ render();
+}
+
+generate("low");
+</script>
+</body>
+</html>
